@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Larry Smith</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+:root{
+  --max:1180px;
+  --gap:24px;
+  --muted:#667;
+  --gold:#f4d188;
+  --bg:#000;
+  --card-bg:rgba(255,255,255,0.04);
+}
+
+/* Reset / layout */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,Helvetica, sans-serif;overflow-x:hidden}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gap)}
+#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* shared metallic effect for specific containers */
+.main-nav,.thumb,.profile-container,.widget.media{
+  position:relative;background:#000;border:1px outset #6677;padding:1.3rem;overflow:visible;z-index:1
+}
+.main-nav::before,.thumb::before,.profile-container::before,.widget.media::before{
+  content:"";position:absolute;inset:-2px;z-index:-1;
+  background:
+    linear-gradient(32deg,#fff,#0122,#000f,#6666,#0126,#fff8,#0006,#000c,#a866,#0128),
+    linear-gradient(#a86,#234);
+  box-shadow:2px 4px 1px 1px #0008
+}
+.main-nav::after,.thumb::after,.profile-container::after,.widget.media::after{
+  content:"";position:absolute;inset:-5px;z-index:2;pointer-events:none;border:6px solid;
+  border-color:#fff #000 #446 #cde;mix-blend-mode:overlay;opacity:.5
+}
+
+/* gold / silver text styles */
+@keyframes g { 0%{background-position:110% 0,0 0}100%{background-position:-10% 0,0 0} }
+[data-gold]{
+  font-family:'Playfair Display',serif;font-weight:600;color:transparent;
+  background:linear-gradient(90deg,#c78c48,#cf9147 9.4%,#b2763e 33.6%,#ac723d 46.9%,#b0793e 52.1%,#ce9e54 73.2%,#f4d188);
+  background-size:200% auto;background-clip:text;-webkit-background-clip:text;animation:g 5s ease-in-out infinite alternate;
+  text-shadow:0 0 8px #f7e3ac4d,0 0 16px #f7dc9633
+}
+.main-nav a[data-gold]{font-size:22px}
+
+[data-silver]{
+  color:transparent;background:linear-gradient(270deg,#8c8c8c 1.3%,#999 15%,#868686 29.6%,#828282 29.6%,#7d7d7d 31.8%,#797979 31.8%,#6a6a6a 38.9%,#d3d3d3);
+  background-size:200% auto;background-clip:text;-webkit-background-clip:text;animation:g 2s ease-in-out 2 alternate-reverse 2s
+}
+
+/* header/hero */
+header{height:72px;position:relative;z-index:20}
+.hero{padding:24px 0;position:relative;z-index:2}
+.mainimage img{width:100%;border-radius:4px;display:block;margin:auto}
+.main-nav{display:flex;justify-content:center;gap:32px;width:100%;padding:1.3rem var(--gap);
+  background:linear-gradient(to right,transparent 0,transparent calc(var(--gap)-1px),#000 var(--gap),#000 calc(100%-var(--gap)),transparent calc(100%-var(--gap)+1px),transparent)
+}
+
+/* main / columns / cards */
+main{margin-top:48px;padding:48px 0;position:relative;z-index:2}
+.columns{display:grid;grid-template-columns:1fr 320px;gap:32px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:20px}
+.thumb{
+  background:#111;border:1px solid #333;border-radius:10px;padding:16px;text-align:center
+}
+.thumb img{width:100%;border-radius:8px;height:auto;max-height:165px;object-fit:contain}
+
+/* social buttons */
+.social-buttons{position:fixed;top:24px;right:25px;display:flex;gap:1rem;z-index:99999}
+.social-buttons a{padding:.75rem 1rem;background:linear-gradient(135deg,#cab062,#543a23,#a5833f);box-shadow:0 0 1rem #000;border-radius:10px;transition:transform .2s}
+.social-buttons a span{display:inline-block} /* keeps icon vertical centering */
+
+/* subscribe button */
+.widget.subscribe{margin:40px auto;display:flex;justify-content:center}
+.widget.subscribe button[data-gold]{
+  all:unset;padding:9px 24px;font-family:'Playfair Display',serif;font-weight:700;font-size:24px;
+  background:linear-gradient(90deg,#b0793e,#f4d188,#ce9e54,#b0793e);background-size:200% 100%;color:#000;
+  border:2px solid #f4d188;border-radius:12px;cursor:pointer;box-shadow:0 0 20px #f4d18899,inset 0 1px 0 #fff6;
+  animation:g 4s ease-in-out infinite alternate;transition:.25s;min-width:280px;text-align:center
+}
+.widget.subscribe button[data-gold]:hover{transform:translateY(-3px);box-shadow:0 0 30px #f4d188e6;background-position:100% 0}
+
+/* biography card */
+.bio{
+  background:rgba(0,0,0,.65);padding:2.5rem 3rem;border-radius:16px;margin:3rem auto;max-width:var(--max);
+  backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.03);box-shadow:0 0 10px 30px rgba(0,0,0,0.05);
+  color:#fff
+}
+
+/* store */
+.store-wrapper{margin:4rem auto 6rem}
+.store-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.8rem;padding:3rem;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(12px);border-radius:16px;border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 8px 40px rgba(0,0,0,0.6);position:relative;overflow:hidden;transition:all .6s cubic-bezier(.4,0,.2,1)
+}
+.store-grid.teaser{max-height:560px;padding-bottom:140px;box-sizing:border-box}
+.store-item{
+  background:var(--card-bg);padding:1.4rem;border-radius:12px;text-align:center;transition:transform .28s;backdrop-filter:blur(4px)
+}
+.store-item:hover{transform:translateY(-8px)}
+.store-item img{width:100%;height:240px;object-fit:cover;border-radius:10px;margin-bottom:1rem;background:#222}
+.store-item h3[data-gold]{margin:.5rem 0;font-size:1.15rem}
+.price{font-size:1.6rem;font-weight:700;color:var(--gold);margin:.6rem 0}
+.buy-btn{display:inline-block;padding:.65rem 1.8rem;background:rgba(244,209,136,0.2);border:1px solid var(--gold);border-radius:8px;color:var(--gold);text-decoration:none;font-weight:600;transition:all .25s}
+.buy-btn:hover{background:var(--gold);color:#111}
+
+/* fade edges + overlay */
+.store-grid.teaser::before,.store-grid.teaser::after{content:"";position:absolute;top:0;bottom:0;width:90px;pointer-events:none;z-index:2}
+.store-grid.teaser::before{left:0;background:linear-gradient(to right,#000,transparent)}
+.store-grid.teaser::after{right:0;background:linear-gradient(to left,#000,transparent)}
+.expand-overlay{position:absolute;bottom:0;left:0;right:0;height:140px;background:linear-gradient(transparent,rgba(0,0,0,0.98));display:flex;align-items:flex-end;justify-content:center;padding-bottom:20px;pointer-events:none;z-index:3}
+.expand-btn{background:var(--gold);color:#111;border:none;padding:14px 36px;font-size:17px;font-weight:bold;border-radius:50px;cursor:pointer;pointer-events:all;transition:.18s}
+.expand-btn:hover{background:#fff;transform:scale(1.06)}
+
+/* footer */
+footer{border-top:1px solid #333;padding:28px 0;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center}
+
+/* media widget */
+.widget.media{padding:1.3rem}
+.media-player{width:100%;display:flex;justify-content:center;padding-top:6px}
+.media-frame{width:100%;max-width:360px;border:1px solid #6e6e6e;border-radius:10px;background:linear-gradient(180deg,rgba(14,14,14,0.85),rgba(28,28,28,0.95));padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.53), inset 0 1px 0 rgba(255,255,255,0.03);backdrop-filter:blur(2px)}
+.media-info{text-align:center;margin-bottom:8px}
+.media-title{font-size:14px;font-weight:600;color:var(--gold);text-shadow:0 0 6px rgba(244,209,136,0.12)}
+.media-subtitle{font-size:12px;color:#d6d6d6;opacity:.8;margin-top:2px}
+.media-controls{display:flex;justify-content:center;gap:10px;margin:10px 0 8px 0}
+.mp-btn{width:38px;height:38px;border:1px solid #3b3b3b;border-radius:50%;background:linear-gradient(145deg,#151515,#2a2a2a);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s ease,box-shadow .12s ease,color .12s ease}
+.mp-btn:hover{box-shadow:0 0 8px rgba(244,209,136,0.18);color:var(--gold);transform:translateY(-2px);border-color:rgba(244,209,136,0.3)}
+.media-progress{width:100%;height:6px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.02)}
+.media-progress-bar{width:0%;height:100%;background:linear-gradient(90deg,#f4d188,#e6c56b);transition:width .25s linear}
+
+/* responsive */
+@media (max-width:900px){
+  .menu-toggle{display:flex}
+  .main-nav, header.under-hero{display:none}
+  .columns{display:flex;flex-direction:column}
+  .social-buttons{position:static;justify-content:center;margin:20px 0 0 0;transform:scale(.75)}
+  main{margin-top:1px !important}
+  .hero{padding-bottom:10px}
+  .thumb,.profile-container{max-width:420px;margin:auto}
+  .thumb{padding:20px 30px}
+  .thumb img{max-height:280px;object-fit:cover}
+  aside{order:-1;margin-bottom:40px}
+  .widget.subscribe button[data-gold]{transform:scale(.65)}
+  .widget.subscribe{margin:10px 10px 20px}
+  .profile-container{padding:35px 50px;display:flex;justify-content:center;align-items:center}
+  .profile-container img{transform:scale(1.4)}
+  .cards{grid-template-columns:1fr}
+  .store-grid{grid-template-columns:repeat(2,1fr)!important;gap:1.4rem;padding:2rem}
+  .store-grid.teaser{max-height:780px}
+}
+@media (max-width:560px){
+  .store-grid{grid-template-columns:1fr!important}
+}
+@media (max-width:420px){
+  .media-frame{max-width:320px;padding:10px}
+  .mp-btn{width:36px;height:36px;font-size:14px}
+}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+<button class="menu-toggle" aria-label="Menu" aria-expanded="false"><span class="bar" aria-hidden="true"></span><span class="bar" aria-hidden="true"></span><span class="bar" aria-hidden="true"></span></button>
+<div class="mobile-overlay" id="o" hidden></div>
+
+<nav id="n" class="mobile-nav" hidden>
+  <a data-gold href="unfinished_business.html">Larry Smith and Unfinished Business</a>
+  <a data-gold href="ascencial_band.html">The Ascential Blues Band</a>
+  <a data-gold href="dangeroux_duo.html">Dangeroux Bros</a>
+  <a data-gold href="store.html">Store</a>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="mainimage">
+      <div class="profile-container">
+        <a href="#biography"><img src="web_assets/final_image_gold_logo_transparency.jpg" alt="Larry Smith"></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<header class="under-hero">
+  <div class="wrap">
+    <nav class="main-nav" role="navigation" aria-label="Main">
+      <a href="#biography" data-gold>Biography</a>
+      <a href="ascencial_band.html" data-gold>Upcoming Gigs</a>
+      <a href="#store" data-gold>Bands</a>
+      <a href="dangeroux_duo.html" data-gold>Music and Videos</a>
+      <a href="#store" data-gold>Store</a>
+    </nav>
+  </div>
+</header>
+
+<div class="social-buttons" aria-hidden="false">
+  <a href="https://facebook.com/larrysmithes" aria-label="Facebook"><span data-silver class="ri-facebook-fill"></span></a>
+  <a href="https://instagram.com/larrysmithmusic" aria-label="Instagram"><span data-silver class="ri-instagram-fill"></span></a>
+  <a href="https://x.com/larry_smith_25" aria-label="X"><span data-silver class="ri-twitter-x-fill"></span></a>
+  <a href="https://youtube.com/@LarrySmithMusic" aria-label="YouTube"><span data-silver class="ri-youtube-fill"></span></a>
+  <a href="https://myspace.com/larrysmithes" aria-label="Myspace"><span data-silver class="ri-team-fill"></span></a>
+</div>
+
+<main class="wrap">
+  <div>
+    <aside>
+      <div class="widget subscribe"><button data-gold>Subscribe</button></div>
+    </aside>
+  </div>
+</main>
+
+<section>
+  <div id="biography" class="bio">
+    <h2>Biography</h2>
+    <p>If you don't know the Blues, there's no point in even picking up a guitar. An Award winning guitarist (and multi instrumentalist) Larry Smith comes with a warning: Watch out! He plays Blues/Rock that bites back! .
+Half British and half American, Larry came of age in the 60's, when Rock propelled music and popular culture into a consciousness that continues to be a major influence two generations later. Chuck Berry famously said, "It used to be called Boogie-Woogie, it used to be called Blues, used to be called Rhythm and Blues. It's called Rock now."  Living in London in 1967, he heard Jimmy Hendrix on pirate radio and was inspired to learn guitar. This opened the door to the influences of The Yardbirds, John Mayall, The Rolling Stones, Frank Zappa, Robert Johnson, Lightnin’ Hopkins, Bo Diddley and many others.
+In a career that spans both sides of the Atlantic and over 3,500 gigs. His shows are riveting because he knows exactly how to unharness a performance in the moment. He effortlessly blends powerful guitar playing with an expressive vocal style to shape his signature sound. a mix of Rory Gallagher, Jimi Hendrix and Stevie Ray with a dash of Richie Blackmore. He consistently brings a new edge to performances and balances his playing with a technical excellence that comes only from a lifetime devoted to music.
+He has worked with members of AC/DC, Manfred Mann, Deep Purple, Dio, Rainbow, The Blues Band, Thin Lizzy, Home, Wings, The Who, Marcus Malone, Cozy Powell, and also many sessions.
+After years on the road, Larry finally took a break from music and the music business and moved to Spain. It wasn't long before Larry started performing again in and around Barcelona and began making his mark on the local scene with his fantastic guitar playing. He is currently recording new music with a newly formed classic blues/rock trio, Larry Smith and Unfinished Business. A diverse and accomplished musician who also plays slide guitar, bass, mandolin, banjo and trumpet, Larry is also a composer/writer, live and studio engineer and actor.</p>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="columns">
+    <section>
+      <h2 data-gold>Current Projects</h2>
+      <div class="cards">
+        <a href="unfinished_business.html"><div class="thumb"><h3 data-gold>Upcoming Dates</h3><img src="web_assets/logo_unfinished_business_1077_final.jpg" alt=""></div></a>
+        <a href="ascencial_band.html"><div class="thumb"><h3 data-gold>Upcoming Dates</h3><img src="web_assets/logo_ascencial_blues_band_final1077.jpeg" alt=""></div></a>
+        <a href="dangeroux_duo.html"><div class="thumb"><h3 data-gold>Upcoming Dates</h3><img src="web_assets/logo_dangeroux_duo_1077_final.jpg" alt=""></div></a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="wrap">
+  <div id="store" class="store-wrapper">
+    <h2 data-gold style="text-align:center;margin:4rem 0 2rem">Store</h2>
+    <div class="store-grid teaser" id="storeGrid">
+
+      <div class="store-item">
+        <img src="/home/computer/Pictures/LAB/Images Crosses AI/Cross Jesus Mug.png" alt="Vinyl">
+        <h3 data-gold>Skull with Gems and Gold</h3>
+        <p class="price">$35</p>
+        <a href="#" class="buy-btn" data-gold>Buy Now</a>
+      </div>
+
+      <div class="store-item">
+        <img src="/home/computer/Pictures/LAB/Random AI prompts/coffemug.png" alt="Poster">
+        <h3 data-gold>Skull with gems and gold with leaf</h3>
+        <p class="price">$25</p>
+        <a href="#" class="buy-btn" data-gold>Buy Now</a>
+      </div>
+
+      <div class="store-item">
+        <img src="/home/computer/Pictures/LAB/Random AI prompts/masbermellbeer.png" alt="T-Shirt">
+        <h3 data-gold>Skull made out of meteorite and quartz</h3>
+        <p class="price">$30</p>
+        <a href="#" class="buy-btn" data-gold>Buy Now</a>
+      </div>
+
+      <div class="store-item">
+        <img src="/home/computer/Pictures/LAB/Random AI prompts/Lecumbeer.png" alt="Vinyl">
+        <h3 data-gold>Skull with Gems and Gold</h3>
+        <p class="price">$35</p>
+        <a href="#" class="buy-btn" data-gold>Buy Now</a>
+      </div>
+
+      <div class="store-item">
+        <img src="/home/computer/Pictures/LAB/Random AI prompts/wales.png" alt="Poster">
+        <h3 data-gold>Skull with gems and gold with leaf</h3>
+        <p class="price">$25</p>
+        <a href="#" class="buy-btn" data-gold>Buy Now</a>
+      </div>
+
+      <div class="store-item">
+        <img src="/home/computer/Pictures/LAB/AI Lab Manu Paintings/colorbud.png" alt="T-Shirt">
+        <h3 data-gold>Skull made out of meteorite and quartz</h3>
+        <p class="price">$30</p>
+        <a href="#" class="buy-btn" data-gold>Buy Now</a>
+      </div>
+
+      <div class="expand-overlay">
+        <button class="expand-btn" id="expandBtn" aria-expanded="false">See all products →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="widget media" aria-label="Now playing">
+    <div class="media-player">
+      <div class="media-frame">
+        <div class="media-info">
+          <div class="media-title" data-gold>Now Playing</div>
+          <div class="media-subtitle">No track loaded</div>
+        </div>
+        <div class="media-controls">
+          <button class="mp-btn mp-prev" aria-label="Previous">❮</button>
+          <button class="mp-btn mp-play" aria-label="Play/Pause">▶</button>
+          <button class="mp-btn mp-next" aria-label="Next">❯</button>
+        </div>
+        <div class="media-progress" aria-hidden="true">
+          <div class="media-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="uplink-audio" preload="metadata"></audio>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div data-gold>© 2025 Larry Smith</div>
+    <div data-gold>Privacy · Terms</div>
+  </div>
+</footer>
+
+<script>
+/* -------------------------
+   Utility / small helpers
+   ------------------------- */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+/* -------------------------
+   Mobile menu toggle
+   ------------------------- */
+(() => {
+  const btn = $('.menu-toggle');
+  const nav = document.getElementById('n');
+  const overlay = document.getElementById('o');
+
+  if (!btn || !nav || !overlay) return;
+
+  function openState(open) {
+    if (open) {
+      nav.removeAttribute('hidden');
+      overlay.hidden = false;
+      btn.setAttribute('aria-expanded','true');
+      document.body.style.overflow = 'hidden';
+    } else {
+      nav.setAttribute('hidden','');
+      overlay.hidden = true;
+      btn.setAttribute('aria-expanded','false');
+      document.body.style.overflow = '';
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    const isOpen = btn.getAttribute('aria-expanded') === 'true';
+    openState(!isOpen);
+  });
+
+  overlay.addEventListener('click', () => openState(false));
+})();
+
+/* -------------------------
+   Social button hover (throttled)
+   ------------------------- */
+(() => {
+  const links = $$('.social-buttons a');
+  if (!links.length) return;
+
+  links.forEach(a => {
+    let raf = null;
+    function onMove(e){
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(()=>{
+        const r = a.getBoundingClientRect();
+        const x = (e.clientX - r.left);
+        const p = Math.max(0, Math.min(100, (x / r.width) * 100));
+        a.style.background = `linear-gradient(to bottom right,#cab062 0%,#543a23 ${p}%,#a5833f 100%)`;
+        a.style.transform = `perspective(90vw) rotateY(${(p/5)-10}deg)`;
+      });
+    }
+    a.addEventListener('pointermove', onMove);
+    a.addEventListener('pointerleave', ()=>{
+      if (raf) cancelAnimationFrame(raf);
+      a.style.background = '';
+      a.style.transform = '';
+    });
+  });
+})();
+
+/* -------------------------
+   WebGL background (kept functional)
+   ------------------------- */
+(() => {
+  const frag = `#version 300 es
+precision highp float;
+uniform float t;
+uniform vec2 r;
+in vec2 u;
+out vec4 o;
+float n(vec2 p){return fract(sin(dot(p,vec2(1.,300.)))*43758.5453123);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);float a=n(i),b=n(i+vec2(1,0)),c=n(i+vec2(0,1)),d=n(i+1.);vec2 v=f*f*(3.-2.*f);return mix(a,b,v.x)+(c-a)*v.y*(1.-v.x)+(d-b)*v.x*v.y;}
+float fbm(vec2 p){float v=0.,a=.4;for(int i=0;i<5;i++){v+=a*noise(p);p*=2.;a*=.4;}return v;}
+void main(){vec2 p=u;p.x*=r.x/r.y;float g=mix(p.y*.6+.1,p.y*1.2+.9,fbm(p));vec2 q=(vec2(p.x,p.y-t*.2)*7.);float ns=fbm(q),ins=fbm(vec2(fbm(q+ns+t)*.9-.5,ns));vec3 c=mix(vec3(.95,.7,.3),vec3(.6,.4,.1),ins+.5);o=vec4(c+vec3(ins-g),1);}`;
+
+  const vert = `#version 300 es
+precision mediump float;
+const vec2 pos[6] = vec2[6](vec2(-1,-1),vec2(1,-1),vec2(-1,1),vec2(-1,1),vec2(1,-1),vec2(1,1));
+out vec2 u;
+void main(){u = pos[gl_VertexID]; gl_Position = vec4(pos[gl_VertexID], 0., 1.); }`;
+
+  const canvas = document.getElementById('bgCanvas');
+  if (!canvas) return;
+  const gl = canvas.getContext('webgl2');
+  if (!gl) return;
+
+  function compile(type, src){
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    return sh;
+  }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vert));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, frag));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const uniT = gl.getUniformLocation(prog, 't');
+  const uniR = gl.getUniformLocation(prog, 'r');
+  let start = Date.now();
+
+  function resize(){
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    gl.viewport(0,0,canvas.width,canvas.height);
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  function frame(){
+    const now = (Date.now() - start) / 1000;
+    gl.uniform1f(uniT, now);
+    gl.uniform2f(uniR, innerWidth, innerHeight);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+/* -------------------------
+   Media player (cleaned)
+   ------------------------- */
+(() => {
+  const audio = $('#uplink-audio');
+  const playBtn = $('.mp-play');
+  const nextBtn = $('.mp-next');
+  const prevBtn = $('.mp-prev');
+  const titleEl = $('.media-title');
+  const subtitleEl = $('.media-subtitle');
+  const progressBar = $('.media-progress-bar');
+
+  if (!audio || !playBtn || !nextBtn || !prevBtn) return;
+
+  const playlist = [
+    { title: "Primera parte", subtitle: "Official Track", src: "/home/computer/Music/AI raw material/ primera parte future.mp3" },
+    { title: "Segunda parte", subtitle: "Official Track", src: "/home/computer/Music/AI raw material/segunda parte future.mp3" },
+    { title: "Respect the Hustle", subtitle: "Official Track", src: "/home/computer/Music/AI raw material/Respect the Hustle [music].mp3" },
+    { title: "Respect the Hustle (WAV)", subtitle: "Official Track", src: "/home/computer/Music/AI raw material/mix_Respect the Hustle (1).wav" }
+  ];
+
+  let idx = 0;
+  let playing = false;
+
+  function setText(el, txt){ if (el) el.textContent = txt || ''; }
+  function loadTrack(i){
+    if (i < 0 || i >= playlist.length) return;
+    idx = i;
+    audio.src = playlist[i].src;
+    audio.load();
+    setText(titleEl, playlist[i].title || 'Unknown');
+    setText(subtitleEl, playlist[i].subtitle || '');
+    // update aria progress
+    if (progressBar) progressBar.style.width = '0%';
+  }
+
+  function togglePlay(){
+    if (!audio.src) loadTrack(idx);
+    if (playing) {
+      audio.pause();
+    } else {
+      audio.play().catch(()=>{ /* play may be blocked until user gesture */ });
+    }
+  }
+
+  playBtn.addEventListener('click', () => {
+    togglePlay();
+  });
+
+  audio.addEventListener('play', () => {
+    playing = true;
+    playBtn.textContent = '▌▌';
+    playBtn.setAttribute('aria-pressed','true');
+  });
+
+  audio.addEventListener('pause', () => {
+    playing = false;
+    playBtn.textContent = '▶';
+    playBtn.setAttribute('aria-pressed','false');
+  });
+
+  nextBtn.addEventListener('click', () => {
+    idx = (idx + 1) % playlist.length;
+    loadTrack(idx);
+    if (playing) audio.play().catch(()=>{});
+  });
+
+  prevBtn.addEventListener('click', () => {
+    idx = (idx - 1 + playlist.length) % playlist.length;
+    loadTrack(idx);
+    if (playing) audio.play().catch(()=>{});
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    if (!audio.duration || !progressBar) return;
+    const p = (audio.currentTime / audio.duration) * 100;
+    progressBar.style.width = p + '%';
+    progressBar.setAttribute('aria-valuenow', Math.floor(p));
+  });
+
+  audio.addEventListener('ended', () => {
+    // auto advance
+    idx = (idx + 1) % playlist.length;
+    loadTrack(idx);
+    audio.play().catch(()=>{});
+  });
+
+  if (playlist.length) loadTrack(0);
+})();
+
+/* -------------------------
+   Expandable store
+   ------------------------- */
+(() => {
+  const grid = document.getElementById('storeGrid');
+  const btn = document.getElementById('expandBtn');
+  if (!grid || !btn) return;
+
+  function setCollapsed(collapsed){
+    if (collapsed) {
+      grid.classList.add('teaser');
+      btn.textContent = 'See all products →';
+      btn.setAttribute('aria-expanded','false');
+    } else {
+      grid.classList.remove('teaser');
+      btn.textContent = 'Show less ↑';
+      btn.setAttribute('aria-expanded','true');
+    }
+  }
+
+  // initial state: grid has class 'teaser' by default in markup
+  setCollapsed(grid.classList.contains('teaser'));
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setCollapsed(!grid.classList.contains('teaser'));
+  });
+
+  // clicking a product expands the grid (useful for mobile)
+  grid.addEventListener('click', (e) => {
+    if (e.target.closest('.expand-btn')) return;
+    if (e.target.closest('.store-item') && grid.classList.contains('teaser')) {
+      setCollapsed(false);
+    }
+  });
+})();
+</script>
+</body>
+</html>
